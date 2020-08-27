@@ -18,7 +18,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/simplesteph/grpc-go-course/blog/blogpb"
+	"github.com/mdemaiocwg/celestial-body-info/planet/planetpb"
 	"google.golang.org/grpc"
 )
 
@@ -27,91 +27,87 @@ var collection *mongo.Collection
 type server struct {
 }
 
-type blogItem struct {
-	ID       primitive.ObjectID `bson:"_id,omitempty"`
-	AuthorID string             `bson:"author_id"`
-	Content  string             `bson:"content"`
-	Title    string             `bson:"title"`
+type inclination struct {
+	Ecliptic        float64 `bson:"ecliptic"`
+	SunsEquator     float64 `bson:"suns_equator"`
+	InvariablePlane float64 `bson:"invariable_plane"`
 }
 
-func (*server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*blogpb.CreateBlogResponse, error) {
-	fmt.Println("Create blog request")
-	blog := req.GetBlog()
-
-	data := blogItem{
-		AuthorID: blog.GetAuthorId(),
-		Title:    blog.GetTitle(),
-		Content:  blog.GetContent(),
-	}
-
-	res, err := collection.InsertOne(context.Background(), data)
-	if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			fmt.Sprintf("Internal error: %v", err),
-		)
-	}
-	oid, ok := res.InsertedID.(primitive.ObjectID)
-	if !ok {
-		return nil, status.Errorf(
-			codes.Internal,
-			fmt.Sprintf("Cannot convert to OID"),
-		)
-	}
-
-	return &blogpb.CreateBlogResponse{
-		Blog: &blogpb.Blog{
-			Id:       oid.Hex(),
-			AuthorId: blog.GetAuthorId(),
-			Title:    blog.GetTitle(),
-			Content:  blog.GetContent(),
-		},
-	}, nil
-
+type orbitalInfo struct {
+	Aphelion                 float64     `bson:"aphelion"`
+	Perihelion               float64     `bson:"perihelion"`
+	SemiMajorAxis            float64     `bson:"semi_major_axis"`
+	Eccentricity             float64     `bson:"eccentricity"`
+	OrbitalPeriod            float64     `bson:"orbital_period"`
+	SynodicPeriod            float64     `bson:"synodic_period"`
+	AvgOrbitalSpeed          float64     `bson:"avg_orbital_speed"`
+	MeanAnomaly              float64     `bson:"mean_anomaly"`
+	Inclination              inclination `bson:"inclination"`
+	LongitudeOfAscendingNode float64     `bson:"longitude_of_ascending_node"`
+	Satelites                uint32      `bson:"satelites"`
 }
 
-func (*server) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRequest) (*blogpb.ReadBlogResponse, error) {
-	fmt.Println("Read blog request")
-
-	blogID := req.GetBlogId()
-	oid, err := primitive.ObjectIDFromHex(blogID)
-	if err != nil {
-		return nil, status.Errorf(
-			codes.InvalidArgument,
-			fmt.Sprintf("Cannot parse ID"),
-		)
-	}
-
-	// create an empty struct
-	data := &blogItem{}
-	filter := bson.M{"_id": oid}
-
-	res := collection.FindOne(context.Background(), filter)
-	if err := res.Decode(data); err != nil {
-		return nil, status.Errorf(
-			codes.NotFound,
-			fmt.Sprintf("Cannot find blog with specified ID: %v", err),
-		)
-	}
-
-	return &blogpb.ReadBlogResponse{
-		Blog: dataToBlogPb(data),
-	}, nil
+type albedo struct {
+	Geometric float64 `bson:"geometric"`
+	Bond      float64 `bson:"bond"`
 }
 
-func dataToBlogPb(data *blogItem) *blogpb.Blog {
-	return &blogpb.Blog{
-		Id:       data.ID.Hex(),
-		AuthorId: data.AuthorID,
-		Content:  data.Content,
-		Title:    data.Title,
-	}
+type surfaceTemp struct {
+	Min  int32 `bson:"min"`
+	Max  int32 `bson:"max"`
+	Mean int32 `bson:"mean"`
 }
 
-func (*server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) (*blogpb.UpdateBlogResponse, error) {
-	fmt.Println("Update blog request")
-	blog := req.GetBlog()
-	oid, err := primitive.ObjectIDFromHex(blog.GetId())
+type apparentMagnitude struct {
+	Min float64 `bson:"min"`
+	Max float64 `bson:"max"`
+}
+
+type physicalInfo struct {
+	MeanRadius                 string            `bson:"mean_radius"`
+	EquatorialRadius           string            `bson:"equatorial_radius"`
+	PolarRadius                string            `bson:"polar_radius"`
+	Flattening                 string            `bson:"flattening"`
+	SurfaceArea                float64           `bson:"surface_area"`
+	Volume                     float64           `bson:"volume"`
+	Mass                       float64           `bson:"mass"`
+	MeanDensity                float64           `bson:"mean_density"`
+	SurfaceGravity             float64           `bson:"surface_gravity"`
+	MomentOfInertiaFactor      string            `bson:"moment_of_inertia_factor"`
+	EscapeVelocity             float64           `bson:"escape_velocity"`
+	SiderealRotationPeriod     float64           `bson:"sidereal_rotation_period"`
+	EquatorialRotationVelocity float64           `bson:"equatorial_rotation_velocity"`
+	AxialTilt                  float64           `bson:"axial_tilt"`
+	NorthpoleRightAscension    float64           `bson:"northpole_right_ascension"`
+	NorthpoleDeclination       float64           `bson:"northpole_declination"`
+	Albedo                     albedo            `bson:"albedo"`
+	SurfaceTemp                surfaceTemp       `bson:"surface_temp"`
+	ApparentMagnitude          apparentMagnitude `bson:"apparent_magnitude"`
+}
+
+type element struct {
+	Name             string  `bson:"name"`
+	PercentAsDecimal float64 `bson:"percent_as_decimal"`
+}
+
+type atmosphereInfo struct {
+	SurfacePressure float64   `bson:"surface_pressure"`
+	Elements        []element `bson:"element"` // Many elements make up a planets atmospheric composition.
+}
+
+type planetItem struct {
+	ID             primitive.ObjectID `bson:"_id,omitempty"`
+	Name           string             `bson:"name"`
+	OrbitalInfo    orbitalInfo        `bson:"orbital_info"`
+	PhysicalInfo   physicalInfo       `bson:"physical_info"`
+	AtmosphereInfo atmosphereInfo     `bson:"atmosphere_info"`
+}
+
+func (*server) ReadPlanet(ctx context.Context, req *planetpb.ReadPlanetRequest) (*planetpb.ReadPlanetResponse, error) {
+	fmt.Println("Read planet request")
+
+	planetID := req.GetPlanetId()
+	oid, err := primitive.ObjectIDFromHex(planetID)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
@@ -120,97 +116,128 @@ func (*server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) (*
 	}
 
 	// create an empty struct
-	data := &blogItem{}
+	data := &planetItem{}
 	filter := bson.M{"_id": oid}
 
 	res := collection.FindOne(context.Background(), filter)
 	if err := res.Decode(data); err != nil {
 		return nil, status.Errorf(
 			codes.NotFound,
-			fmt.Sprintf("Cannot find blog with specified ID: %v", err),
+			fmt.Sprintf("Cannot find planet with specified ID: %v", err),
 		)
 	}
 
-	// we update our internal struct
-	data.AuthorID = blog.GetAuthorId()
-	data.Content = blog.GetContent()
-	data.Title = blog.GetTitle()
-
-	_, updateErr := collection.ReplaceOne(context.Background(), filter, data)
-	if updateErr != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			fmt.Sprintf("Cannot update object in MongoDB: %v", updateErr),
-		)
-	}
-
-	return &blogpb.UpdateBlogResponse{
-		Blog: dataToBlogPb(data),
+	return &planetpb.ReadPlanetResponse{
+		Planet: dataToPlanetPb(data),
 	}, nil
-
 }
 
-func (*server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*blogpb.DeleteBlogResponse, error) {
-	fmt.Println("Delete blog request")
-	oid, err := primitive.ObjectIDFromHex(req.GetBlogId())
-	if err != nil {
-		return nil, status.Errorf(
-			codes.InvalidArgument,
-			fmt.Sprintf("Cannot parse ID"),
-		)
+// func (*server) ListPlanet(ctx context.Context, req *planetpb.ListPlanetRequest) (*planetpb.ListPlanetResponse, error) {
+// 	fmt.Println("List planet request")
+
+// 	blogID := req.GetBlogId()
+// 	oid, err := primitive.ObjectIDFromHex(blogID)
+// 	if err != nil {
+// 		return nil, status.Errorf(
+// 			codes.InvalidArgument,
+// 			fmt.Sprintf("Cannot parse ID"),
+// 		)
+// 	}
+
+// 	// create an empty struct
+// 	data := &blogItem{}
+// 	filter := bson.M{"_id": oid}
+
+// 	res := collection.FindOne(context.Background(), filter)
+// 	if err := res.Decode(data); err != nil {
+// 		return nil, status.Errorf(
+// 			codes.NotFound,
+// 			fmt.Sprintf("Cannot find blog with specified ID: %v", err),
+// 		)
+// 	}
+
+// 	return &planetpb.ReadPlanetResponse{
+// 		Planet: dataToPlanetPb(data),
+// 	}, nil
+// }
+
+func dataToPlanetPb(data *planetItem) *planetpb.Planet {
+	inclination := &planetpb.Inclination{
+		Ecliptic:        data.OrbitalInfo.Inclination.Ecliptic,
+		Sunsequator:     data.OrbitalInfo.Inclination.SunsEquator,
+		Invariableplane: data.OrbitalInfo.Inclination.InvariablePlane,
+	}
+	orbitalInfo := &planetpb.OrbitalInfo{
+		Aphelion:                 data.OrbitalInfo.Aphelion,
+		Perihelion:               data.OrbitalInfo.Perihelion,
+		Semimajoraxis:            data.OrbitalInfo.SemiMajorAxis,
+		Eccentricity:             data.OrbitalInfo.Eccentricity,
+		Orbitalperiod:            data.OrbitalInfo.OrbitalPeriod,
+		Synodicperiod:            data.OrbitalInfo.SynodicPeriod,
+		Avgorbitalspeed:          data.OrbitalInfo.AvgOrbitalSpeed,
+		Meananomaly:              data.OrbitalInfo.MeanAnomaly,
+		Inclination:              inclination,
+		Longitudeofascendingnode: data.OrbitalInfo.LongitudeOfAscendingNode,
+		Satelites:                data.OrbitalInfo.Satelites,
 	}
 
-	filter := bson.M{"_id": oid}
-
-	res, err := collection.DeleteOne(context.Background(), filter)
-
-	if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			fmt.Sprintf("Cannot delete object in MongoDB: %v", err),
-		)
+	albedo := &planetpb.Albedo{
+		Geometric: data.PhysicalInfo.Albedo.Geometric,
+		Bond:      data.PhysicalInfo.Albedo.Bond,
+	}
+	surfaceTemp := &planetpb.SurfaceTemp{
+		Min:  data.PhysicalInfo.SurfaceTemp.Min,
+		Max:  data.PhysicalInfo.SurfaceTemp.Max,
+		Mean: data.PhysicalInfo.SurfaceTemp.Mean,
+	}
+	apparentMagnitude := &planetpb.ApparentMagnitude{
+		Min: data.PhysicalInfo.ApparentMagnitude.Min,
+		Max: data.PhysicalInfo.ApparentMagnitude.Max,
+	}
+	physicalInfo := &planetpb.PhysicalInfo{
+		Meanradius:                 data.PhysicalInfo.MeanRadius,
+		Equatorialradius:           data.PhysicalInfo.EquatorialRadius,
+		Polarradius:                data.PhysicalInfo.PolarRadius,
+		Flattening:                 data.PhysicalInfo.Flattening,
+		Surfacearea:                data.PhysicalInfo.SurfaceArea,
+		Volume:                     data.PhysicalInfo.Volume,
+		Mass:                       data.PhysicalInfo.Mass,
+		Meandensity:                data.PhysicalInfo.MeanDensity,
+		Surfacegravity:             data.PhysicalInfo.SurfaceGravity,
+		Momentofinertiafactor:      data.PhysicalInfo.MomentOfInertiaFactor,
+		Escapevelocity:             data.PhysicalInfo.EscapeVelocity,
+		Siderealrotationperiod:     data.PhysicalInfo.SiderealRotationPeriod,
+		Equatorialrotationvelocity: data.PhysicalInfo.EquatorialRotationVelocity,
+		Axialtilt:                  data.PhysicalInfo.AxialTilt,
+		Northpolerightascension:    data.PhysicalInfo.NorthpoleRightAscension,
+		Northpoledeclination:       data.PhysicalInfo.NorthpoleDeclination,
+		Albedo:                     albedo,
+		Surfacetemp:                surfaceTemp,
+		Apparentmagnitude:          apparentMagnitude,
 	}
 
-	if res.DeletedCount == 0 {
-		return nil, status.Errorf(
-			codes.NotFound,
-			fmt.Sprintf("Cannot find blog in MongoDB: %v", err),
-		)
-	}
-
-	return &blogpb.DeleteBlogResponse{BlogId: req.GetBlogId()}, nil
-}
-
-func (*server) ListBlog(req *blogpb.ListBlogRequest, stream blogpb.BlogService_ListBlogServer) error {
-	fmt.Println("List blog request")
-
-	cur, err := collection.Find(context.Background(), primitive.D{{}})
-	if err != nil {
-		return status.Errorf(
-			codes.Internal,
-			fmt.Sprintf("Unknown internal error: %v", err),
-		)
-	}
-	defer cur.Close(context.Background())
-	for cur.Next(context.Background()) {
-		data := &blogItem{}
-		err := cur.Decode(data)
-		if err != nil {
-			return status.Errorf(
-				codes.Internal,
-				fmt.Sprintf("Error while decoding data from MongoDB: %v", err),
-			)
-
+	elements := []*planetpb.Element{} // Not sure if this is correct.
+	for _, v := range data.AtmosphereInfo.Elements {
+		element := &planetpb.Element{
+			Name:             v.Name,
+			Percentasdecimal: v.PercentAsDecimal,
 		}
-		stream.Send(&blogpb.ListBlogResponse{Blog: dataToBlogPb(data)})
+
+		elements = append(elements, element)
 	}
-	if err := cur.Err(); err != nil {
-		return status.Errorf(
-			codes.Internal,
-			fmt.Sprintf("Unknown internal error: %v", err),
-		)
+
+	atmosphereInfo := &planetpb.AtmosphereInfo{
+		Surfacepressure: data.AtmosphereInfo.SurfacePressure,
+		Element:         elements,
 	}
-	return nil
+
+	return &planetpb.Planet{
+		PlanetId:       data.ID.Hex(),
+		Name:           data.Name,
+		Orbitalinfo:    orbitalInfo,
+		Physicalinfo:   physicalInfo,
+		Atmosphereinfo: atmosphereInfo,
+	}
 }
 
 func main() {
@@ -228,8 +255,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Blog Service Started")
-	collection = client.Database("mydb").Collection("blog")
+	fmt.Println("Planet Service Started")
+	collection = client.Database("celestial-body-info").Collection("planet")
 
 	lis, err := net.Listen("tcp", "0.0.0.0:50051")
 	if err != nil {
@@ -238,7 +265,7 @@ func main() {
 
 	opts := []grpc.ServerOption{}
 	s := grpc.NewServer(opts...)
-	blogpb.RegisterBlogServiceServer(s, &server{})
+	planetpb.RegisterPlanetServiceServer(s, &server{})
 	// Register reflection service on gRPC server.
 	reflection.Register(s)
 
@@ -257,17 +284,17 @@ func main() {
 	<-ch
 	// First we close the connection with MongoDB:
 	fmt.Println("Closing MongoDB Connection")
-    	// client.Disconnect(context.TODO())	
+	// client.Disconnect(context.TODO())
 	if err := client.Disconnect(context.TODO()); err != nil {
-        	log.Fatalf("Error on disconnection with MongoDB : %v", err)
-    	}
-    	// Second step : closing the listener
-    	fmt.Println("Closing the listener")
-    	if err := lis.Close(); err != nil {
-        	log.Fatalf("Error on closing the listener : %v", err)
+		log.Fatalf("Error on disconnection with MongoDB : %v", err)
+	}
+	// Second step : closing the listener
+	fmt.Println("Closing the listener")
+	if err := lis.Close(); err != nil {
+		log.Fatalf("Error on closing the listener : %v", err)
 	}
 	// Finally, we stop the server
 	fmt.Println("Stopping the server")
-    	s.Stop()
-    	fmt.Println("End of Program")
+	s.Stop()
+	fmt.Println("End of Program")
 }
