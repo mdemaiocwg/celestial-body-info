@@ -53,9 +53,9 @@ type albedo struct {
 }
 
 type surfaceTemp struct {
-	Min  int32 `bson:"min"`
-	Max  int32 `bson:"max"`
-	Mean int32 `bson:"mean"`
+	Min  float64 `bson:"min"`
+	Max  float64 `bson:"max"`
+	Mean float64 `bson:"mean"`
 }
 
 type apparentMagnitude struct {
@@ -132,34 +132,36 @@ func (*server) ReadPlanet(ctx context.Context, req *planetpb.ReadPlanetRequest) 
 	}, nil
 }
 
-// func (*server) ListPlanet(ctx context.Context, req *planetpb.ListPlanetRequest) (*planetpb.ListPlanetResponse, error) {
-// 	fmt.Println("List planet request")
+func (*server) ListPlanet(ctx context.Context, req *planetpb.ListPlanetRequest) (*planetpb.ListPlanetResponse, error) {
+	fmt.Println("List planet request")
 
-// 	blogID := req.GetBlogId()
-// 	oid, err := primitive.ObjectIDFromHex(blogID)
-// 	if err != nil {
-// 		return nil, status.Errorf(
-// 			codes.InvalidArgument,
-// 			fmt.Sprintf("Cannot parse ID"),
-// 		)
-// 	}
+	filter := bson.M{}
+	planets := []*planetpb.Planet{}
 
-// 	// create an empty struct
-// 	data := &blogItem{}
-// 	filter := bson.M{"_id": oid}
+	cursor, err := collection.Find(context.Background(), filter)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			fmt.Sprintf("Unknown internal error: %v", err),
+		)
+	}
+	defer cursor.Close(context.Background())
+	for cursor.Next(context.Background()) {
+		data := &planetItem{}
+		err := cursor.Decode(data)
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				fmt.Sprintf("Error while decoding from mongodb: %v", err),
+			)
+		}
+		planets = append(planets, dataToPlanetPb(data))
+	}
 
-// 	res := collection.FindOne(context.Background(), filter)
-// 	if err := res.Decode(data); err != nil {
-// 		return nil, status.Errorf(
-// 			codes.NotFound,
-// 			fmt.Sprintf("Cannot find blog with specified ID: %v", err),
-// 		)
-// 	}
-
-// 	return &planetpb.ReadPlanetResponse{
-// 		Planet: dataToPlanetPb(data),
-// 	}, nil
-// }
+	return &planetpb.ListPlanetResponse{
+		Planet: planets,
+	}, nil
+}
 
 func dataToPlanetPb(data *planetItem) *planetpb.Planet {
 	inclination := &planetpb.Inclination{
@@ -284,7 +286,6 @@ func main() {
 	<-ch
 	// First we close the connection with MongoDB:
 	fmt.Println("Closing MongoDB Connection")
-	// client.Disconnect(context.TODO())
 	if err := client.Disconnect(context.TODO()); err != nil {
 		log.Fatalf("Error on disconnection with MongoDB : %v", err)
 	}
