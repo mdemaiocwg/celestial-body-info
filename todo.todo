@@ -1,6 +1,6 @@
-- [] Setup planet proto file.
-- [] Updated generate.sh to point to correct files.
-- [] Generate planetpb code.
+- [X] Setup planet proto file.
+- [X] Updated generate.sh to point to correct files.
+- [X] Generate planetpb code.
 - [] Update planet_server code to use newly generated code from above.
 - [] Updated main.go to correctly use new planet server.
 
