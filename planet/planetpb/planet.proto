@@ -60,9 +60,9 @@ message Element{
 }
 
 message SurfaceTemp {
-    sint32 min = 1; // golang int32
-    sint32 max = 2; // golang int32
-    sint32 mean = 3; // golang int32
+    double min = 1; // golang int32
+    double max = 2; // golang int32
+    double mean = 3; // golang int32
 }
 
 message ApparentMagnitude{
@@ -89,14 +89,14 @@ message ReadPlanetResponse {
     Planet planet = 1; // List of planets
 }
 
-// message ListPlanetRequest {
-// }
+message ListPlanetRequest {
+}
 
-// message ListPlanetResponse {
-//     repeated Planet planet = 1; // List of planets
-// }
+message ListPlanetResponse {
+    repeated Planet planet = 1; // List of planets
+}
 
 service PlanetService {
     rpc ReadPlanet (ReadPlanetRequest) returns (ReadPlanetResponse); // return NOT_FOUND if not found
-    //rpc ListPlanet (ListPlanetRequest) returns (ListPlanetResponse); // return NOT_FOUND if not found
+    rpc ListPlanet (ListPlanetRequest) returns (ListPlanetResponse); // return NOT_FOUND if not found
 }
