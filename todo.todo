@@ -1,0 +1,8 @@
+- [] Setup planet proto file.
+- [] Updated generate.sh to point to correct files.
+- [] Generate planetpb code.
+- [] Update planet_server code to use newly generated code from above.
+- [] Updated main.go to correctly use new planet server.
+
+---- Future Ideas -----
+- [] Real time distance from tracker. (Track planets distance from earth in realtime updated every x seconds)
