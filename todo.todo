@@ -5,8 +5,12 @@
 - [X] Update planet_server code to use newly generated code from above.
 - [X] Updated main.go to correctly use new planet server.
 - [X] Implement ListPlanent Functionality.
-- [] Setup http server to handle request from frontend.
-- [] Test with postman to ensure its working properly.
+- [X] Setup http server to handle request from frontend.
+- [X] Test with postman to ensure its working properly.
+- [] Update http server for error handling and returning errors to frontend.
+- [] Update http server to implement Read method along with existing list method.
+- [] Update http server to use timeouts.
+- [] Update http server by adding logging.
 
 ---- Future Ideas -----
 - [] Real time distance from tracker. (Track planets distance from earth in realtime updated every x seconds)
