@@ -4,6 +4,9 @@
 - [X] Insert test data into planet table.
 - [X] Update planet_server code to use newly generated code from above.
 - [X] Updated main.go to correctly use new planet server.
+- [X] Implement ListPlanent Functionality.
+- [] Setup http server to handle request from frontend.
+- [] Test with postman to ensure its working properly.
 
 ---- Future Ideas -----
 - [] Real time distance from tracker. (Track planets distance from earth in realtime updated every x seconds)
