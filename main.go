@@ -26,11 +26,20 @@ func main() {
 	// read Planet
 	fmt.Println("Reading the planet")
 
-	res, err2 := c.ReadPlanet(context.Background(), &planetpb.ReadPlanetRequest{PlanetId: "5f47c1ad093cc8a6577e0918"})
-	if err2 != nil {
-		fmt.Printf("Error happened while reading: %v \n", err2)
+	resRead, err := c.ReadPlanet(context.Background(), &planetpb.ReadPlanetRequest{PlanetId: "5f47c1ad093cc8a6577e0918"})
+	if err != nil {
+		fmt.Printf("Error happened while reading: %v \n", err)
 	}
 
-	fmt.Printf("Planet was read: %v \n", res)
+	fmt.Printf("Planet was read: %v \n", resRead)
 
+	// list Planet
+	fmt.Println("Listing the planets")
+
+	resList, err := c.ListPlanet(context.Background(), &planetpb.ListPlanetRequest{})
+	if err != nil {
+		fmt.Printf("Error happened while listing: %v \n", err)
+	}
+
+	fmt.Printf("Planets were listed: %v \n", resList)
 }
