@@ -16,7 +16,7 @@ message OrbitalInfo {
     float aphelion = 1; // golang float32
     float perihelion = 2; // golang float32
     float semimajoraxis = 3; // golang float32
-    float Eccentricity = 4; // golang float32
+    float eccentricity = 4; // golang float32
     float orbitalperiod = 5; // golang float32
     float synodicperiod = 6; // golang float32
     float avgorbitalspeed = 7; // golang float32
@@ -84,7 +84,7 @@ message ListPlanetResponse {
     repeated Planet planet = 1; // List of planets
 }
 
-service BlogService {
+service PlanetService {
     rpc ReadPlanet (ReadPlanetRequest) returns (ReadPlanetResponse); // return NOT_FOUND if not found
     rpc ListPlanet (ListPlanetRequest) returns (ListPlanetResponse); // return NOT_FOUND if not found
 }
