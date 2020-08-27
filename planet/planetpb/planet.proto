@@ -10,6 +10,7 @@ message Planet {
     string name = 2;
     OrbitalInfo orbitalinfo = 3;
     PhysicalInfo physicalinfo = 4;
+    AtmosphereInfo atmosphereinfo = 5;
 }
 
 message OrbitalInfo {
@@ -21,7 +22,7 @@ message OrbitalInfo {
     float synodicperiod = 6; // golang float32
     float avgorbitalspeed = 7; // golang float32
     float meananomaly = 8; // golang float32
-    float inclination = 9; // golang float32
+    Inclination inclination = 9; 
     float longitudeofascendingnode = 10; // golang float 32
     uint32 satelites = 11; // golang uint32
 }
@@ -36,20 +37,20 @@ message PhysicalInfo {
     double mass = 7; // golang float64
     float meandensity = 8; // golang float32
     float surfacegravity = 9; // golang float32
-    string momentofintertiafactor = 10;
+    string momentofinertiafactor = 10;
     float escapevelocity = 11; // golang float32
-    float siderealrotationperiod = 12;
-    float equatorialrotationvelocity = 13;
-    float axialtilt = 14;
-    float northpolerightascension = 15;
-    float northpoledeclination = 16;
-    float albedo = 17;
+    float siderealrotationperiod = 12; // golang float32
+    float equatorialrotationvelocity = 13; // golang float32
+    float axialtilt = 14; // golang float32
+    float northpolerightascension = 15; // golang float32
+    float northpoledeclination = 16; // golang float32
+    Albedo albedo = 17; 
     SurfaceTemp surfacetemp = 18;
     ApparentMagnitude apparentmagnitude = 19;
 }
 
 message AtmosphereInfo{
-    float surfacepressure = 1;
+    float surfacepressure = 1; // golang float32
     repeated Element element = 2;
 }
 
@@ -59,14 +60,25 @@ message Element{
 }
 
 message SurfaceTemp {
-    uint32 min = 1; // golang uint32
-    uint32 max = 2; // golang uint32
-    uint32 mean = 3; // golang uint32
+    sint32 min = 1; // golang int32
+    sint32 max = 2; // golang int32
+    sint32 mean = 3; // golang int32
 }
 
 message ApparentMagnitude{
-    sint32 min = 1; // golang int32
-    sint32 max = 2; // golang int32
+    float min = 1; // golang float32
+    float max = 2; // golang float32
+}
+
+message Inclination {
+    float ecliptic = 1; // golang float32
+    float sunsequator = 2; // golang float32
+    float invariableplane = 3; // golang float32
+}
+
+message Albedo {
+    float geometric = 1; // golang float32
+    float bond = 2; // golang float32
 }
 
 message ReadPlanetRequest {
